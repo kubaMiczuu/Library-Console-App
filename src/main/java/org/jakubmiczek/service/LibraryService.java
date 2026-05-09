@@ -1,6 +1,7 @@
 package org.jakubmiczek.service;
 
 import org.jakubmiczek.exception.BookAlreadyExistException;
+import org.jakubmiczek.exception.BookNotFoundException;
 import org.jakubmiczek.model.Book;
 import org.jakubmiczek.repository.BookRepository;
 
@@ -17,15 +18,17 @@ public class LibraryService {
     public void addBook(Book book) {
         if(bookRepository.findByIsbn(book.getIsbn()).isEmpty()) {
             bookRepository.save(book);
-        } else throw new BookAlreadyExistException("Book with ISBN: "+book.getIsbn()+ " already exists");
+        } else throw new BookAlreadyExistException("[SYSTEM]: Book with ISBN: "+book.getIsbn()+ " already exists");
     }
 
     public List<Book> search(String fragment) {
-        return bookRepository.findAll().stream().filter(b -> b.getTitle().contains(fragment)).toList();
+        return bookRepository.findAll().stream().filter(b -> b.getTitle().toLowerCase().contains(fragment.toLowerCase())).toList();
     }
 
     public void deleteBook(String isbn) {
-        bookRepository.deleteByIsbn(isbn);
+        if(bookRepository.findByIsbn(isbn).isPresent()) {
+            bookRepository.deleteByIsbn(isbn);
+        } else throw new BookNotFoundException("[SYSTEM]: Book with ISBN: "+isbn+ " not found");
     }
 
     public List<Book> getBooks() {
